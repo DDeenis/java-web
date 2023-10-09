@@ -4,20 +4,17 @@
 
 <web-app>
   <display-name>Archetype Created Web Application</display-name>
-  <servlet>
-    <servlet-name>HomeServlet</servlet-name>
-    <servlet-class>servlets.HomeServlet</servlet-class>
-  </servlet>
-  <servlet>
-    <servlet-name>JspServlet</servlet-name>
-    <servlet-class>servlets.JspServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>HomeServlet</servlet-name>
-    <url-pattern></url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>JspServlet</servlet-name>
-    <url-pattern>/jsp</url-pattern>
-  </servlet-mapping>
+  
+  <filter>
+    <filter-name>IocFilter</filter-name>
+    <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>IocFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  
+  <listener>
+    <listener-class>step.learning.ioc.IocContextListener</listener-class>
+  </listener>
 </web-app>

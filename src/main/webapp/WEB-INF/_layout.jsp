@@ -29,9 +29,13 @@
     <div class="nav-wrapper blue lighten-2">
         <a href="#" class="brand-logo">Logo</a>
         <ul id="nav-mobile" class="right hide-on-med-and-down">
-            <li><a href="jsp">About</a></li>
-            <li><a href="badges.html">Components</a></li>
-            <li><a href="collapsible.html">JavaScript</a></li>
+            <li class="<%=pageBody.equals("about.jsp") ? "active" : ""%>">
+                <a href="<%=context%>/jsp">About</a>
+            </li>
+            <li class="<%=pageBody.equals("step.learning.filters.jsp") ? "active" : ""%>">
+                <a href="<%=context%>/filters">Filters</a>
+            </li>
+            <li><a href="<%=context%>/ioc">IOC</a></li>
         </ul>
     </div>
 </nav>
