@@ -12,17 +12,8 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- Compiled and minified JavaScript -->
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <style>
-        body {
-            display: flex;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-
-        main {
-            flex: 1 0 auto;
-        }
-    </style>
+    <link rel="stylesheet" href="<%=context%>/css/styles.css">
+    <script src="<%=context%>/js/index.js" defer></script>
 </head>
 <body>
 <nav>
@@ -36,6 +27,11 @@
                 <a href="<%=context%>/filters">Filters</a>
             </li>
             <li><a href="<%=context%>/ioc">IOC</a></li>
+            <li>
+                <a class="modal-trigger auth-icon" href="#signup-modal">
+                    <i class="material-icons">login</i>
+                </a>
+            </li>
         </ul>
     </div>
 </nav>
@@ -67,5 +63,15 @@
         </div>
     </div>
 </footer>
+<div id="signup-modal" class="modal">
+    <div class="modal-content">
+        <h4>Modal Header</h4>
+        <p>A bunch of text</p>
+    </div>
+    <div class="modal-footer">
+        <a href="<%=context%>/signup" class="modal-close waves-effect waves-green btn-flat blue lighten-3">Register</a>
+        <a href="#!" class="waves-effect blue lighten-4 btn-flat">Sign In</a>
+    </div>
+</div>
 </body>
 </html>
