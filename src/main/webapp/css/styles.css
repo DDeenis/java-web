@@ -21,3 +21,7 @@ main {
     border-color: #1E88E5;
     background-color: #1E88E5;
 }
+
+[type="checkbox"].filled-in.invalid:checked+span:not(.lever):after {
+    border-color: #F44336;
+}

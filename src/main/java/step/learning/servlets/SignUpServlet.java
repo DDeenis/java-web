@@ -1,7 +1,9 @@
 package step.learning.servlets;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import step.learning.dto.models.RegFormModel;
+import step.learning.services.formparse.FormParseService;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -13,6 +15,13 @@ import java.text.ParseException;
 
 @Singleton
 public class SignUpServlet extends HttpServlet {
+    private final FormParseService formParseService;
+
+    @Inject
+    public SignUpServlet(FormParseService formParseService) {
+        this.formParseService = formParseService;
+    }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
@@ -42,8 +51,9 @@ public class SignUpServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         RegFormModel model = null;
         try {
-            model = new RegFormModel(req);
+            model = new RegFormModel(formParseService.parse(req));
         } catch (ParseException ignored) {
+            System.err.println("Failed to parse registration form model");
         }
 
         HttpSession session = req.getSession();
