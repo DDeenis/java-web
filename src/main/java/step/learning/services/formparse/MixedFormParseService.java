@@ -36,7 +36,7 @@ public class MixedFormParseService implements FormParseService {
     }
 
     @Override
-    public FormParseResult parse(HttpServletRequest request) {
+    public FormParseResult parse(final HttpServletRequest request) {
         final Map<String, String> fields = new HashMap<>();
         final Map<String, FileItem> files = new HashMap<>();
 
@@ -77,6 +77,11 @@ public class MixedFormParseService implements FormParseService {
             @Override
             public Map<String, FileItem> getFiles() {
                 return files;
+            }
+
+            @Override
+            public HttpServletRequest getRequest() {
+                return request;
             }
         };
     }

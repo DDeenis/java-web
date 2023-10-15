@@ -4,8 +4,8 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.FilenameUtils;
 import step.learning.services.formparse.FormParseResult;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -14,8 +14,10 @@ import java.util.regex.Pattern;
 public class RegFormModel {
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private static final String[] allowedAvatarExtensions = new String[] { "jpg", "png", "webp", "avif", "bmp", "gif" };
+    private final FormParseResult formParseResult;
 
     public RegFormModel(FormParseResult result) throws ParseException {
+        this.formParseResult = result;
         Map<String, String> fields = result.getFields();
         setRealName(fields.get("reg-name"));
         setLogin(fields.get("reg-login"));
@@ -169,11 +171,13 @@ public class RegFormModel {
 
         String savedFileName;
         File savedFile;
-        String uploadPath = "D:\\Java\\JavaWeb201\\public\\avatars";
+        String uploadPath = formParseResult.getRequest().getServletContext().getRealPath("./upload/avatar");
+        System.out.println(uploadPath);
+//        "D:\\Java\\JavaWeb201\\public\\avatars";
 
         do {
             savedFileName = String.format("%s.%s", UUID.randomUUID().toString().substring(0, 8), ext);
-            savedFile = new File(String.format("%s\\%s", uploadPath, savedFileName));
+            savedFile = new File(uploadPath, savedFileName);
         } while (savedFile.exists());
 
         File avatarsDirectory = new File(uploadPath);
