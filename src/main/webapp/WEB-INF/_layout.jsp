@@ -1,3 +1,4 @@
+<%@ page import="java.util.Date" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
   String pageBody = (String) request.getAttribute("page-body");
@@ -12,8 +13,8 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- Compiled and minified JavaScript -->
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <link rel="stylesheet" href="<%=context%>/css/styles.css">
-    <script src="<%=context%>/js/index.js" defer></script>
+    <link rel="stylesheet" href="<%=context%>/css/styles.css?time=<%=new Date().getTime()%>">
+    <script src="<%=context%>/js/index.js?time=<%=new Date().getTime()%>" defer></script>
 </head>
 <body>
 <nav>
@@ -23,10 +24,15 @@
             <li class="<%=pageBody.equals("about.jsp") ? "active" : ""%>">
                 <a href="<%=context%>/jsp">About</a>
             </li>
-            <li class="<%=pageBody.equals("step.learning.filters.jsp") ? "active" : ""%>">
+            <li class="<%=pageBody.equals("filters.jsp") ? "active" : ""%>">
                 <a href="<%=context%>/filters">Filters</a>
             </li>
-            <li><a href="<%=context%>/ioc">IOC</a></li>
+            <li class="<%=pageBody.equals("ioc.jsp") ? "active" : ""%>">
+                <a href="<%=context%>/ioc">IOC</a>
+            </li>
+            <li class="<%=pageBody.equals("db.jsp") ? "active" : ""%>">
+                <a href="<%=context%>/db">DB</a>
+            </li>
             <li>
                 <a class="modal-trigger auth-icon" href="#signup-modal">
                     <i class="material-icons">login</i>

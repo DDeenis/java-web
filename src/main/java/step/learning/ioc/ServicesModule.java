@@ -3,6 +3,8 @@ package step.learning.ioc;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Names;
+import step.learning.services.db.DbProvider;
+import step.learning.services.db.PlanetScaleDbProvider;
 import step.learning.services.formparse.FormParseService;
 import step.learning.services.formparse.MixedFormParseService;
 import step.learning.services.hash.*;
@@ -15,6 +17,10 @@ public class ServicesModule extends AbstractModule {
         bind(HashService.class).annotatedWith(Names.named("DSA-Hash")).to(MD5HashService.class);
 
         bind(FormParseService.class).to(MixedFormParseService.class);
+
+        bind(DbProvider.class).to(PlanetScaleDbProvider.class);
+
+        bind(String.class).annotatedWith(Names.named("db-prefix")).toInstance("kn201__");
     }
 
     private RandomService randomService;
