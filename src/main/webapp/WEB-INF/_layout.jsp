@@ -41,7 +41,7 @@
         </ul>
     </div>
 </nav>
-<main>
+<main style="padding: 0.5rem 1rem">
     <jsp:include page="<%=pageBody%>"/>
 </main>
 <footer class="page-footer blue lighten-2">

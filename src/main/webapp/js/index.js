@@ -50,4 +50,53 @@ function insertFormSubmit(e) {
             "Content-Type": "application/json"
         }
     })
+        .then(r => r.json())
+        .then(r => console.log(r))
+}
+
+const readButton = document.getElementById("db-read-button")
+if(readButton) {
+    readButton.addEventListener('click', readButtonClick)
+}
+
+function readButtonClick(e) {
+    fetch(window.location.href, {
+        method: "COPY"
+    })
+        .then((r) => r.json())
+        .then((calls) => {
+            const container = document.getElementById('table-container')
+            const table = document.createElement('table')
+            const thead = document.createElement('thead')
+            const tbody = document.createElement('tbody')
+            const initialRow = document.createElement('tr')
+            initialRow.append(
+                createTableCell('<b>Id</b>'),
+                createTableCell('Name'),
+                createTableCell('Phone'),
+                createTableCell('Moment')
+            )
+            thead.appendChild(initialRow)
+
+            for(let i = 0; i < calls.length; i++) {
+                const call = calls[i]
+                const tr = document.createElement('tr')
+                tr.append(
+                    createTableCell(call.id),
+                    createTableCell(call.name),
+                    createTableCell(call.phone),
+                    createTableCell(new Date(call.moment).toDateString())
+                )
+                tbody.appendChild(tr);
+            }
+
+            table.append(thead, tbody)
+            container.replaceChildren(table)
+        })
+}
+
+function createTableCell(text) {
+    const td = document.createElement('td')
+    td.innerHTML = text
+    return td;
 }

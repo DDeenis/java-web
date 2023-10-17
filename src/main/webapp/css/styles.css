@@ -25,3 +25,18 @@ main {
 [type="checkbox"].filled-in.invalid:checked+span:not(.lever):after {
     border-color: #F44336;
 }
+
+table, th, td {
+    border: 1px solid gray;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+table {
+    width: 500px;
+    max-width: 100%;
+}
+
+button {
+    width: max-content;
+}

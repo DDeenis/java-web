@@ -29,4 +29,10 @@
     </form>
 </div>
 <br />
-<u id="out"></u>
+<div class="row">
+    <button id="db-read-button" class="waves-effect waves-light blue lighten-2 btn" type="submit">
+        <i class="material-icons left">phone_iphone</i>
+        Show order
+    </button>
+    <div id="table-container"></div>
+</div>
