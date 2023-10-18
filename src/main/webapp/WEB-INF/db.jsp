@@ -30,7 +30,7 @@
 </div>
 <br />
 <div class="row">
-    <button id="db-read-button" class="waves-effect waves-light blue lighten-2 btn" type="submit">
+    <button id="db-read-button" class="waves-effect waves-light blue lighten-2 btn" type="submit" style="margin-bottom: 1rem">
         <i class="material-icons left">phone_iphone</i>
         Show order
     </button>

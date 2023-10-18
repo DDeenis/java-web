@@ -74,7 +74,8 @@ function readButtonClick(e) {
                 createTableCell('<b>Id</b>'),
                 createTableCell('Name'),
                 createTableCell('Phone'),
-                createTableCell('Moment')
+                createTableCell('Moment'),
+                createTableCell('Call Moment'),
             )
             thead.appendChild(initialRow)
 
@@ -85,7 +86,12 @@ function readButtonClick(e) {
                     createTableCell(call.id),
                     createTableCell(call.name),
                     createTableCell(call.phone),
-                    createTableCell(new Date(call.moment).toDateString())
+                    createTableCell(new Date(call.moment).toDateString()),
+                    createTableCell(
+                        call.callMoment ?
+                            new Date(call.callMoment).toDateString() :
+                            `<button class="waves-effect waves-light blue lighten-2 btn" data-id="${call.id}" onclick="callClick(event)">Call</button>`
+                    ),
                 )
                 tbody.appendChild(tr);
             }
@@ -99,4 +105,26 @@ function createTableCell(text) {
     const td = document.createElement('td')
     td.innerHTML = text
     return td;
+}
+
+function callClick(e) {
+    const id = e.target.dataset.id
+    if(!id) return;
+
+    fetch(window.location.href, {
+        method: 'LINK',
+        body: JSON.stringify({ id }),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+        .then(r => r.json())
+        .then(r => {
+            if(typeof r === "string") {
+                console.error(r);
+                return;
+            }
+
+            e.target.outerHTML = new Date(r.timestamp).toDateString();
+        })
 }

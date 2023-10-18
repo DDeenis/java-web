@@ -27,16 +27,15 @@ main {
 }
 
 table, th, td {
-    border: 1px solid gray;
+    border: 1px solid grey;
     border-collapse: collapse;
     text-align: center;
 }
 
-table {
-    width: 500px;
-    max-width: 100%;
+table tr:nth-child(even) {
+    background-color: #f5f5f5;
 }
 
-button {
-    width: max-content;
+thead tr {
+    background-color: #dddddd;
 }

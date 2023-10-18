@@ -3,6 +3,7 @@ package step.learning.servlets;
 import com.google.gson.*;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import step.learning.dao.CallMeDao;
 import step.learning.dto.entities.CallMe;
 import step.learning.services.db.DbProvider;
 
@@ -16,10 +17,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -28,11 +28,13 @@ import java.util.regex.Pattern;
 public class DbServlet extends HttpServlet {
     private final DbProvider dbProvider;
     private final String dbPrefix;
+    private final CallMeDao callMeDao;
 
     @Inject
-    public DbServlet(DbProvider dbProvider, @Named("db-prefix") String dbPrefix) {
+    public DbServlet(DbProvider dbProvider, @Named("db-prefix") String dbPrefix, CallMeDao callMeDao) {
         this.dbProvider = dbProvider;
         this.dbPrefix = dbPrefix;
+        this.callMeDao = callMeDao;
     }
 
     @Override
@@ -46,6 +48,10 @@ public class DbServlet extends HttpServlet {
             }
             case "COPY": {
                 doCopy(req, resp);
+                break;
+            }
+            case "LINK": {
+                doLink(req, resp);
                 break;
             }
             default: super.service(req, resp);
@@ -145,12 +151,10 @@ public class DbServlet extends HttpServlet {
             phone = phoneElem.getAsString();
 
             if(name == null || !Pattern.matches("^[a-zA-Z ]+$", name)) {
-                message = "Name is empty or have wrong format";
-                status = 400;
+                throw new NullPointerException("Name is empty or have wrong format");
             }
             else if(phone == null || !Pattern.matches("\\+?((\\d{12})|(\\d{2}(\\s?)\\(\\d{3}\\)(\\s?)\\d{3}[\\s-]\\d{2}[\\s-]\\d{2}))$", phone)) {
-                message = "Phone is empty or have wrong format";
-                status = 400;
+                throw new NullPointerException("Phone is empty or have wrong format");
             }
             else {
                 message = "Created";
@@ -165,9 +169,8 @@ public class DbServlet extends HttpServlet {
             return;
         }
         catch (NullPointerException ex) {
-            status = 400;
             result.addProperty("message", ex.getMessage());
-            resp.setStatus(status);
+            resp.setStatus(400);
             resp.getWriter().print(result);
             return;
         }
@@ -197,10 +200,59 @@ public class DbServlet extends HttpServlet {
     }
 
     protected void doCopy(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        List<CallMe> calls = new ArrayList<>();
-        calls.add(new CallMe(100500, "Amogus", "+3805553535", new Date()));
-        calls.add(new CallMe(100501, "Amoguss", "+3805553535", new Date()));
+        List<CallMe> calls = callMeDao.getAll();
         Gson gson = new GsonBuilder().create();
         resp.getWriter().print(gson.toJson(calls));
+    }
+
+    protected void doLink(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String contentType = req.getContentType();
+        if(!contentType.startsWith("application/json")) {
+            resp.setStatus(415);
+            resp.getWriter().print("\"Unsupported Media Type: 'application/json' only\"");
+            return;
+        }
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int len;
+        String json;
+
+        try(InputStream body = req.getInputStream()) {
+            while ((len = body.read(buffer)) > 0) {
+                bytes.write(buffer, 0, len);
+            }
+            json = bytes.toString(StandardCharsets.UTF_8.name());
+        }
+        catch (Exception ex) {
+            System.err.println(ex.getMessage());
+            resp.setStatus(500);
+            resp.getWriter().print("\"Server error\"");
+            return;
+        }
+
+        String sql = "update " + dbPrefix + "call_me set call_moment=? where id=?";
+        Timestamp callTimestamp;
+        try(PreparedStatement statement = dbProvider.getConnection().prepareStatement(sql)) {
+            JsonObject result = JsonParser.parseString(json).getAsJsonObject();
+            long id = result.get("id").getAsLong();
+            callTimestamp = new Timestamp(new Date().getTime());
+            statement.setTimestamp(1, callTimestamp);
+            statement.setLong(2, id);
+            statement.execute();
+        }
+        catch (Exception ex) {
+            System.err.println(ex.getMessage());
+            resp.setStatus(500);
+            resp.getWriter().print("\"Server error\"");
+            return;
+        }
+
+        Gson gson = new GsonBuilder().create();
+        JsonObject response = new JsonObject();
+        response.addProperty("timestamp", callTimestamp.getTime());
+
+        resp.setHeader("Content-Type", "application/json");
+        resp.getWriter().print(gson.toJson(response));
     }
 }
