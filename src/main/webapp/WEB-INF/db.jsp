@@ -29,10 +29,14 @@
     </form>
 </div>
 <br />
-<div class="row">
-    <button id="db-read-button" class="waves-effect waves-light blue lighten-2 btn" type="submit" style="margin-bottom: 1rem">
+<div class="row" style="margin-bottom: 1rem">
+    <button id="db-read-button" class="waves-effect waves-light blue lighten-2 btn">
         <i class="material-icons left">phone_iphone</i>
-        Show order
+        Show orders
     </button>
-    <div id="table-container"></div>
+    <button id="db-read-all-button" class="waves-effect waves-light blue lighten-2 btn" data-include-deleted="true">
+        <i class="material-icons left">phone_iphone</i>
+        Show all orders
+    </button>
 </div>
+<div id="table-container"></div>

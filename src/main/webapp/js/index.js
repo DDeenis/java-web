@@ -59,8 +59,16 @@ if(readButton) {
     readButton.addEventListener('click', readButtonClick)
 }
 
+const readAllButton = document.getElementById("db-read-all-button")
+if(readButton) {
+    readAllButton.addEventListener('click', readButtonClick)
+}
+
 function readButtonClick(e) {
-    fetch(window.location.href, {
+    const includeDeleted = e.target.dataset.includeDeleted === 'true'
+    const url = new URL(window.location.href)
+    includeDeleted && url.searchParams.set('includeDeleted', 'true')
+    fetch(url.toString(), {
         method: "COPY"
     })
         .then((r) => r.json())
@@ -76,21 +84,29 @@ function readButtonClick(e) {
                 createTableCell('Phone'),
                 createTableCell('Moment'),
                 createTableCell('Call Moment'),
+                createTableCell('Delete Moment'),
             )
             thead.appendChild(initialRow)
 
             for(let i = 0; i < calls.length; i++) {
                 const call = calls[i]
                 const tr = document.createElement('tr')
+                const callDate = call.callMoment ? new Date(`${call.callMoment} UTC`) : null;
+                const deleteDate = call.deleteMoment ? new Date(`${call.deleteMoment} UTC`) : null;
                 tr.append(
                     createTableCell(call.id),
                     createTableCell(call.name),
                     createTableCell(call.phone),
                     createTableCell(new Date(call.moment).toDateString()),
                     createTableCell(
-                        call.callMoment ?
-                            new Date(call.callMoment).toDateString() :
-                            `<button class="waves-effect waves-light blue lighten-2 btn" data-id="${call.id}" onclick="callClick(event)">Call</button>`
+                        callDate ?
+                            formatMoment(callDate) :
+                            `<button class="waves-effect waves-light blue lighten-2 btn" data-id="${call.id}" onclick="callClickPatch(event)">Call</button>`
+                    ),
+                    createTableCell(
+                        deleteDate ?
+                            `<p>${formatMoment(deleteDate)}</p><button class="waves-effect waves-light green lighten-2 btn" data-id="${call.id}" onclick="restoreClick(event)">Restore</button>` :
+                            `<button class="waves-effect waves-light red lighten-2 btn" data-id="${call.id}" onclick="deleteClick(event)">Delete</button>`
                     ),
                 )
                 tbody.appendChild(tr);
@@ -99,6 +115,10 @@ function readButtonClick(e) {
             table.append(thead, tbody)
             container.replaceChildren(table)
         })
+}
+
+function formatMoment(date) {
+    return `${date.toDateString()} ${date.toLocaleTimeString()}`
 }
 
 function createTableCell(text) {
@@ -111,20 +131,80 @@ function callClick(e) {
     const id = e.target.dataset.id
     if(!id) return;
 
-    fetch(window.location.href, {
-        method: 'LINK',
-        body: JSON.stringify({ id }),
-        headers: {
-            "Content-Type": "application/json"
-        }
-    })
-        .then(r => r.json())
-        .then(r => {
-            if(typeof r === "string") {
-                console.error(r);
-                return;
+    if(confirm("Are you sure you want to call?")) {
+        fetch(window.location.href, {
+            method: 'LINK',
+            body: JSON.stringify({ id }),
+            headers: {
+                "Content-Type": "application/json"
             }
-
-            e.target.outerHTML = new Date(r.timestamp).toDateString();
         })
+            .then(r => r.json())
+            .then(r => {
+                if(typeof r === "string") {
+                    console.error(r);
+                    return;
+                }
+
+                e.target.outerHTML = formatMoment(new Date(`${r.timestamp} UTC`));
+            })
+    }
+}
+
+function callClickPatch(e) {
+    const id = e.target.dataset.id
+    if(!id) return;
+
+    if(confirm("Are you sure you want to call?")) {
+        fetch(`${window.location.href}?call-id=${id}`, {
+            method: 'PATCH',
+        })
+            .then(r => r.json())
+            .then(r => {
+                if(typeof r === 'string') {
+                    console.error(r);
+                    return;
+                }
+
+                e.target.outerHTML = formatMoment(new Date(`${r.callMoment} UTC`));
+            })
+    }
+}
+
+function deleteClick(e) {
+    const id = e.target.dataset.id
+    if(!id) return;
+
+    if(confirm("Are you sure you want to delete call?")) {
+        fetch(`${window.location.href}?call-id=${id}`, {
+            method: 'DELETE',
+        })
+            .then(r => {
+                if(r.status === 204) {
+                    e.target.closest('tr').remove()
+                    return;
+                }
+
+                r.json().then(console.error)
+            })
+    }
+}
+
+function restoreClick(e) {
+    const id = e.target.dataset.id
+    if(!id) return;
+
+    if(confirm("Are you sure you want to restore call?")) {
+        fetch(`${window.location.href}?call-id=${id}`, {
+            method: 'RESTORE',
+        })
+            .then(r => {
+                if(r.status === 204) {
+                    readAllButton.dispatchEvent(new Event('click'))
+                    return;
+                }
+
+                r.json().then(console.error)
+            })
+    }
 }

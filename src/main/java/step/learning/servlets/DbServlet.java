@@ -20,8 +20,11 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 @Singleton
@@ -54,6 +57,10 @@ public class DbServlet extends HttpServlet {
                 doLink(req, resp);
                 break;
             }
+            case "RESTORE": {
+                doRestore(req, resp);
+                break;
+            }
             default: super.service(req, resp);
         }
     }
@@ -79,13 +86,15 @@ public class DbServlet extends HttpServlet {
         int status;
         String message;
         String sql = String.format(
-                "create table %scall_me (%s,%s,%s,%s) engine = InnoDB default charset = UTF8",
+                "create table %scall_me (%s,%s,%s,%s,%s,%s) engine = InnoDB default charset = UTF8",
                 dbPrefix,
                 //"id BINARY(16) primary key default (UUID_TO_BIN(UUID()))",
-                "id bigint unsigned primary key default (UUID_SHORT())",
-                "name varchar(128) null",
-                "phone char(13) not null comment '+38 098 111 11 11'",
-                "moment datetime default CURRENT_TIMESTAMP"
+                "`id` bigint unsigned primary key default (UUID_SHORT())",
+                "`name` varchar(128) null",
+                "`phone` char(13) not null comment '+38 098 111 11 11'",
+                "`moment` datetime default CURRENT_TIMESTAMP",
+                "`call_moment` datetime null",
+                "`delete_moment` datetime null"
         );
         try(Statement statement = dbProvider.getConnection().createStatement()) {
             statement.execute(sql);
@@ -195,18 +204,107 @@ public class DbServlet extends HttpServlet {
         resp.getWriter().print(result);
     }
 
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String id = req.getParameter("call-id");
+        resp.setContentType("application/json");
+
+        if(id == null) {
+            resp.setStatus(400);
+            resp.getWriter().print("\"Missing parameter: 'call-id'\"");
+            return;
+        }
+
+        CallMe callMe = callMeDao.getById(id);
+        if(callMe == null) {
+            resp.setStatus(404);
+            resp.getWriter().print(String.format("\"Item with id %s not found\"", id));
+            return;
+        }
+
+        boolean success = callMeDao.delete(callMe, true);
+        if(!success) {
+            resp.setStatus(500);
+            resp.getWriter().print("\"Failed to delete\"");
+            return;
+        }
+
+        resp.setStatus(204);
+    }
+
+    protected void doRestore(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String id = req.getParameter("call-id");
+        resp.setContentType("application/json");
+
+        if(id == null) {
+            resp.setStatus(400);
+            resp.getWriter().print("\"Missing parameter: 'call-id'\"");
+            return;
+        }
+
+        CallMe callMe = callMeDao.getById(id, true);
+        if(callMe == null) {
+            resp.setStatus(404);
+            resp.getWriter().print(String.format("\"Item with id %s not found\"", id));
+            return;
+        }
+
+        if(callMe.getDeleteMoment() == null) {
+            resp.setStatus(409);
+            resp.getWriter().print(String.format("\"Item with id %s is not deleted\"", id));
+            return;
+        }
+
+        boolean success = callMeDao.restore(callMe.getId());
+        if(!success) {
+            resp.setStatus(500);
+            resp.getWriter().print("\"Failed to restore\"");
+            return;
+        }
+
+        resp.setStatus(204);
+    }
+
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.getWriter().print("Patch works");
+        String id = req.getParameter("call-id");
+        resp.setContentType("application/json");
+
+        if(id == null) {
+            resp.setStatus(400);
+            resp.getWriter().print("\"Missing parameter: 'call-id'\"");
+            return;
+        }
+
+        CallMe callMe = callMeDao.getById(id);
+        if(callMe == null) {
+            resp.setStatus(404);
+            resp.getWriter().print(String.format("\"Item with parameter %s not found\"", id));
+            return;
+        }
+
+        boolean success = callMeDao.updateCallMoment(callMe);
+        if(!success) {
+            resp.setStatus(500);
+            resp.getWriter().print("\"Failed to update call moment\"");
+            return;
+        }
+
+        String response = new Gson().toJson(callMe);
+        resp.setStatus(200);
+        resp.getWriter().print(response);
     }
 
     protected void doCopy(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        List<CallMe> calls = callMeDao.getAll();
+        //boolean includeDeleted = req.getParameter("includeDeleted") != null;
+        boolean includeDeleted = req.getParameter("includeDeleted") != null && req.getParameter("includeDeleted").equals("true");
+        List<CallMe> calls = callMeDao.getAll(includeDeleted);
         Gson gson = new GsonBuilder().create();
         resp.getWriter().print(gson.toJson(calls));
     }
 
     protected void doLink(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String contentType = req.getContentType();
+        resp.setContentType("application/json");
         if(!contentType.startsWith("application/json")) {
             resp.setStatus(415);
             resp.getWriter().print("\"Unsupported Media Type: 'application/json' only\"");
@@ -231,12 +329,22 @@ public class DbServlet extends HttpServlet {
             return;
         }
 
+        long id;
+        try {
+            JsonObject result = JsonParser.parseString(json).getAsJsonObject();
+            id = result.get("id").getAsLong();
+        }
+        catch (NullPointerException e) {
+            System.err.println(e.getMessage());
+            resp.setStatus(400);
+            resp.getWriter().print("\"Missing required parameter: 'id'\"");
+            return;
+        }
+
         String sql = "update " + dbPrefix + "call_me set call_moment=? where id=?";
         Timestamp callTimestamp;
         try(PreparedStatement statement = dbProvider.getConnection().prepareStatement(sql)) {
-            JsonObject result = JsonParser.parseString(json).getAsJsonObject();
-            long id = result.get("id").getAsLong();
-            callTimestamp = new Timestamp(new Date().getTime());
+            callTimestamp = new Timestamp(getUTCDate().getTime());
             statement.setTimestamp(1, callTimestamp);
             statement.setLong(2, id);
             statement.execute();
@@ -254,5 +362,16 @@ public class DbServlet extends HttpServlet {
 
         resp.setHeader("Content-Type", "application/json");
         resp.getWriter().print(gson.toJson(response));
+    }
+
+    private Date getUTCDate() throws ParseException {
+        SimpleDateFormat dateFormatGmt = new SimpleDateFormat("yyyy-MMM-dd HH:mm:ss");
+        dateFormatGmt.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        //Local time zone
+        SimpleDateFormat dateFormatLocal = new SimpleDateFormat("yyyy-MMM-dd HH:mm:ss");
+
+        //Time in GMT
+        return dateFormatLocal.parse( dateFormatGmt.format(new Date()) );
     }
 }
