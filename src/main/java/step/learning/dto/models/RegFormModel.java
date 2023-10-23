@@ -172,7 +172,6 @@ public class RegFormModel {
         String savedFileName;
         File savedFile;
         String uploadPath = formParseResult.getRequest().getServletContext().getRealPath("./upload/avatar");
-        System.out.println(uploadPath);
 
         do {
             savedFileName = String.format("%s.%s", UUID.randomUUID().toString().substring(0, 8), ext);

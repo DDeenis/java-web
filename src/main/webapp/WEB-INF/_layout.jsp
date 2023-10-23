@@ -11,10 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <!--Import Google Icon Font-->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Compiled and minified JavaScript -->
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <link rel="stylesheet" href="<%=context%>/css/styles.css?time=<%=new Date().getTime()%>">
-    <script src="<%=context%>/js/index.js?time=<%=new Date().getTime()%>" defer></script>
 </head>
 <body>
 <nav>
@@ -32,6 +29,9 @@
             </li>
             <li class="<%=pageBody.equals("db.jsp") ? "active" : ""%>">
                 <a href="<%=context%>/db">DB</a>
+            </li>
+            <li class="<%=pageBody.equals("spa.jsp") ? "active" : ""%>">
+                <a href="<%=context%>/spa">SPA</a>
             </li>
             <li>
                 <a class="modal-trigger auth-icon" href="#signup-modal">
@@ -72,12 +72,28 @@
 <div id="signup-modal" class="modal">
     <div class="modal-content">
         <h4>Modal Header</h4>
-        <p>A bunch of text</p>
+        <form class="row" novalidate>
+            <div class="input-field col s6">
+                <i class="material-icons prefix">person</i>
+                <input id="auth-login" name="auth-login" type="text" class="validate" required>
+                <label for="auth-login">Login</label>
+            </div>
+            <div class="input-field col s6">
+                <i class="material-icons prefix">password</i>
+                <input id="auth-password" name="auth-password" type="password" class="validate" required>
+                <label for="auth-password">Password</label>
+            </div>
+        </form>
     </div>
     <div class="modal-footer">
+        <b id="auth-message"></b>
         <a href="<%=context%>/signup" class="modal-close waves-effect waves-green btn-flat blue lighten-3">Register</a>
-        <a href="#!" class="waves-effect blue lighten-4 btn-flat">Sign In</a>
+        <a href="#!" id="auth-sign-in-btn" class="waves-effect blue lighten-4 btn-flat">Sign In</a>
     </div>
 </div>
+<!-- Compiled and minified JavaScript -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="<%=context%>/js/index.js" defer></script>
+<script src="<%=context%>/js/spa.js?time=<%=new Date().getTime()%>" defer></script>
 </body>
 </html>
