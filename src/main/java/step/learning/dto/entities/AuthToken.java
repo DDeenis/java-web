@@ -1,5 +1,8 @@
 package step.learning.dto.entities;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Date;
 
 public class AuthToken {
@@ -8,11 +11,22 @@ public class AuthToken {
     private Date exp;
     private Date iat;
 
+    public AuthToken() {}
+
     public AuthToken(String jti, String sub, Date exp, Date iat) {
         this.jti = jti;
         this.sub = sub;
         this.exp = exp;
         this.iat = iat;
+    }
+
+    public AuthToken(ResultSet resultSet) throws SQLException {
+        setJti(resultSet.getString("jti"));
+        setSub(resultSet.getString("sub"));
+        Timestamp moment = resultSet.getTimestamp("exp");
+        setExp(new Date(moment.getTime()));
+        moment = resultSet.getTimestamp("iat");
+        setIat(new Date(moment.getTime()));
     }
 
     public String getJti() {

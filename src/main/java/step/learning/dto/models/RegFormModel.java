@@ -28,7 +28,7 @@ public class RegFormModel {
         setAgree(fields.get("reg-agree"));
 
         Map<String, FileItem> files = result.getFiles();
-        if(files.containsKey("reg-avatar")) {
+        if(files.containsKey("reg-avatar") && files.get("reg-avatar").getSize() != 0) {
             setAvatar(files.get("reg-avatar"));
         }
     }
@@ -167,7 +167,7 @@ public class RegFormModel {
             if(extAllowed) break;
         }
 
-        if(!extAllowed) throw new ParseException("File extentions is not supported", 0);
+        if(!extAllowed) throw new ParseException("File extension is not supported", 0);
 
         String savedFileName;
         File savedFile;

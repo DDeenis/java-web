@@ -22,7 +22,7 @@
 %>
 <h2>Registration</h2>
 <%if(regMessage != null) {%>
-<p><%=request.getAttribute("reg-message")%></p>
+<p><%=regMessage%></p>
 <%}%>
 <div class="row">
     <form class="col s12" method="post" action="<%=request.getContextPath()%>/signup" enctype="multipart/form-data">
