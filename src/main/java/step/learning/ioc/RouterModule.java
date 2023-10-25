@@ -17,5 +17,6 @@ public class RouterModule extends ServletModule {
         serve("/db").with(DbServlet.class);
         serve("/auth").with(AuthServlet.class);
         serve("/spa").with(SpaServlet.class);
+        serve("/tpl/*").with(TemplatesServlet.class);
     }
 }

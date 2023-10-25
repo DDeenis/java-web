@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Singleton
 public class AuthServlet extends HttpServlet {
@@ -93,7 +94,10 @@ public class AuthServlet extends HttpServlet {
             sendResponse(resp, 401, "Invalid login or password");
         }
 
-        resp.getWriter().print(gson.toJson(authToken));
+        String jsonToken = gson.toJson(authToken);
+        String base64 = Base64.getUrlEncoder().encodeToString(jsonToken.getBytes());
+        resp.setHeader("Content-Type", "text/plain");
+        resp.getWriter().print(base64);
     }
 
     private void sendResponse(HttpServletResponse resp, int status, Object body) throws IOException {

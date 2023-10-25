@@ -17,15 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const spaTokenStatus = document.getElementById("spa-token-status")
     const spaTokenExp = document.getElementById("spa-exp-status")
     if(spaTokenStatus) {
-        const jti = localStorage.getItem("jti");
-        const exp = localStorage.getItem("exp");
-        const expDate = new Date(`${exp} UTC`);
+        const tokenBase64 = localStorage.getItem("token")
+        const token = JSON.parse(atob(tokenBase64))
+        const expDate = new Date(`${token.exp} UTC`);
         const now = new Date()
         const isExpired = expDate.getTime() < now.getTime();
-        spaTokenStatus.textContent = jti ? jti : 'Not set'
-        spaTokenExp.textContent = isExpired ? 'Token expired' : `Token expires at ${exp.toString()}`
-        if(jti) {
-            fetch('tpl/spa-auth.html')
+        spaTokenStatus.textContent = token.jti ? token.jti : 'Not set'
+        spaTokenExp.textContent = isExpired ? 'Token expired' : `Token expires at ${expDate.toDateString()} ${expDate.toLocaleTimeString()}`
+        if(token.jti) {
+            fetch(getAppContext() + '/tpl/spa-auth.html')
                 .then(r => r.text())
                 .then((html) => {
                     document.querySelector('auth-part').innerHTML = html
@@ -38,11 +38,28 @@ document.addEventListener('DOMContentLoaded', () => {
         logOutBtn.addEventListener('click', logOutClick)
     }
 
-    const getDataBtn = document.getElementById("spa-get-data")
-    if(getDataBtn) {
-        getDataBtn.addEventListener('click', getDataClick)
+    const getData1Btn = document.getElementById("spa-get-data1")
+    const getData2Btn = document.getElementById("spa-get-data2")
+    const getDataNotFound = document.getElementById("spa-get-notfound")
+    if(localStorage.getItem('token') === undefined) {
+        getData1Btn?.remove()
+        getData2Btn?.remove()
+        getDataNotFound?.remove()
+    }
+    if(getData1Btn) {
+        getData1Btn.addEventListener('click', getDataClick("protected-data1.html", 'data-1'))
+    }
+    if(getData2Btn) {
+        getData2Btn.addEventListener('click', getDataClick("protected-data2.html", 'data-2'))
+    }
+    if(getDataNotFound) {
+        getDataNotFound.addEventListener('click', getDataClick("data-something.html", 'data-notfound'))
     }
 })
+
+function getAppContext() {
+    return '/' + window.location.pathname.split('/')[1]
+}
 
 function onModalOpens() {
     const {authLogin, authPassword, authMessage} = getAuthElements();
@@ -74,15 +91,16 @@ function authSignInClick(e) {
                 authMessage.textContent = "Authentication failed";
                 return;
             }
-            return r.json();
+            return r.text();
         })
-        .then(token => {
+        .then(base64 => {
+            const encoded = atob(base64)
+            const token = JSON.parse(encoded)
             if(!token.jti || !token.exp) {
                 authMessage.textContent = "Failed to generate token";
                 return;
             }
-            window.localStorage.setItem('jti', token.jti)
-            window.localStorage.setItem('exp', token.exp)
+            window.localStorage.setItem('token', base64)
             const context = window.location.pathname.split('/')[1]
             const targetPath = `/${context}/spa`
             if(window.location.pathname === targetPath) {
@@ -113,11 +131,34 @@ function getAuthElements() {
 }
 
 function logOutClick() {
-    localStorage.removeItem('jti')
-    localStorage.removeItem('exp')
+    localStorage.removeItem('token')
     window.location.reload()
 }
 
-function getDataClick() {
+function getDataClick(templateName, elemId) {
+    return () => {
+        const token = localStorage.getItem('token')
+        if(!token) return;
+        fetch(`${getAppContext()}/tpl/${templateName}`)
+            .then(r => {
+                if(r.status === 404) {
+                    throw 'Template not found';
+                }
 
+                return r.text();
+            })
+            .then(html => {
+                const elem = document.getElementById(elemId)
+                if(elem) {
+                    elem.innerHTML = html
+                }
+            })
+            .catch(err => {
+                console.error(err)
+                const elem = document.getElementById(elemId)
+                if(elem) {
+                    elem.innerHTML = `<span style='color: red; font-weight: bold;'>Template '${templateName}' not found</span>`
+                }
+            })
+    }
 }
