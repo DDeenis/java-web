@@ -1,5 +1,8 @@
 package step.learning.dao;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
 import step.learning.dto.entities.AuthToken;
 import step.learning.dto.entities.User;
@@ -7,6 +10,7 @@ import step.learning.services.db.DbProvider;
 
 import javax.inject.Named;
 import java.sql.*;
+import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -43,6 +47,31 @@ public class AuthTokenDao {
         }
 
         return true;
+    }
+
+    public AuthToken getTokenByBearer(String bearer) {
+        String jti;
+        try {
+            jti = JsonParser.parseString(
+                new String(Base64.getUrlDecoder().decode(bearer.getBytes()))
+            ).getAsJsonObject().get("jti").getAsString();
+        } catch (Exception e) {
+            return null;
+        }
+
+        String sql = "select bin_to_uuid(t.jti) as `jti`, t.sub, t.iat, t.exp from " + dbPrefix + "auth_tokens t where jti=uuid_to_bin(?) and t.exp > current_timestamp";
+        try(PreparedStatement statement = dbProvider.getConnection().prepareStatement(sql)) {
+            statement.setString(1, jti);
+            ResultSet resultSet = statement.executeQuery();
+            if(resultSet.next()) {
+                return new AuthToken(resultSet);
+            }
+        }
+        catch (SQLException e) {
+            logger.log(Level.WARNING, String.format("%s | %s", e.getMessage(), sql));
+        }
+
+        return null;
     }
 
     public AuthToken getTokenByCredentials(String login, String password) {

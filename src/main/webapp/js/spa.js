@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const spaTokenExp = document.getElementById("spa-exp-status")
     if(spaTokenStatus) {
         const tokenBase64 = localStorage.getItem("token")
+        if(!tokenBase64) return;
         const token = JSON.parse(atob(tokenBase64))
         const expDate = new Date(`${token.exp} UTC`);
         const now = new Date()
@@ -25,10 +26,16 @@ document.addEventListener('DOMContentLoaded', () => {
         spaTokenStatus.textContent = token.jti ? token.jti : 'Not set'
         spaTokenExp.textContent = isExpired ? 'Token expired' : `Token expires at ${expDate.toDateString()} ${expDate.toLocaleTimeString()}`
         if(token.jti) {
-            fetch(getAppContext() + '/tpl/spa-auth.html')
-                .then(r => r.text())
-                .then((html) => {
-                    document.querySelector('auth-part').innerHTML = html
+            fetch(getAppContext() + '/tpl/NP.png', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then(r => r.blob())
+                .then((blob) => {
+                    const elem = new Image()
+                    elem.src = URL.createObjectURL(blob);
+                    document.querySelector('auth-part').replaceChildren(elem)
                 })
         }
     }
@@ -139,7 +146,12 @@ function getDataClick(templateName, elemId) {
     return () => {
         const token = localStorage.getItem('token')
         if(!token) return;
-        fetch(`${getAppContext()}/tpl/${templateName}`)
+        fetch(`${getAppContext()}/tpl/${templateName}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
             .then(r => {
                 if(r.status === 404) {
                     throw 'Template not found';
