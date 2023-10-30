@@ -33,6 +33,9 @@
             <li class="<%=pageBody.equals("spa.jsp") ? "active" : ""%>">
                 <a href="<%=context%>/spa">SPA</a>
             </li>
+            <li class="<%=pageBody.equals("ws.jsp") ? "active" : ""%>">
+                <a href="<%=context%>/ws">WS</a>
+            </li>
             <li>
                 <a class="modal-trigger auth-icon" href="#signup-modal">
                     <i class="material-icons">login</i>

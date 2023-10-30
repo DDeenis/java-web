@@ -8,6 +8,7 @@ public class RouterModule extends ServletModule {
     @Override
     protected void configureServlets() {
         filter("/*").through(CharsetFilter.class);
+        filter("/chat").through(WsFilter.class);
 
         serve("/").with(HomeServlet.class);
         serve("/filters").with(FiltersServlet.class);
@@ -18,5 +19,6 @@ public class RouterModule extends ServletModule {
         serve("/auth").with(AuthServlet.class);
         serve("/spa").with(SpaServlet.class);
         serve("/tpl/*").with(TemplatesServlet.class);
+        serve("/ws").with(WsServlet.class);
     }
 }
