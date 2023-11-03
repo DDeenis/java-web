@@ -59,7 +59,10 @@ public class AuthTokenDao {
             return null;
         }
 
-        String sql = "select bin_to_uuid(t.jti) as `jti`, t.sub, t.iat, t.exp from " + dbPrefix + "auth_tokens t where jti=uuid_to_bin(?) and t.exp > current_timestamp";
+        String sql = "select bin_to_uuid(t.jti) as `jti`, t.sub, t.iat, t.exp, u.`login` as `nik` from "
+                + dbPrefix
+                + "auth_tokens t join " + dbPrefix + "users u on u.id = t.sub "
+                + "where jti=uuid_to_bin(?) and t.exp > current_timestamp";
         try(PreparedStatement statement = dbProvider.getConnection().prepareStatement(sql)) {
             statement.setString(1, jti);
             ResultSet resultSet = statement.executeQuery();

@@ -10,6 +10,7 @@ public class AuthToken {
     private String sub;
     private Date exp;
     private Date iat;
+    private String nik;
 
     public AuthToken() {}
 
@@ -27,6 +28,10 @@ public class AuthToken {
         setExp(new Date(moment.getTime()));
         moment = resultSet.getTimestamp("iat");
         setIat(new Date(moment.getTime()));
+        try {
+            this.nik = resultSet.getString("nik");
+        }
+        catch (Exception ignored) {}
     }
 
     public String getJti() {
@@ -59,5 +64,9 @@ public class AuthToken {
 
     public void setIat(Date iat) {
         this.iat = iat;
+    }
+
+    public String getNik() {
+        return nik;
     }
 }

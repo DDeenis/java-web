@@ -33,10 +33,11 @@ public class ChatDao {
 
     public boolean install() {
         String sql = String.format(
-                "create table %schat (%s,%s,%s) engine InnoDB, default charset = utf8mb4 collate utf8mb4_unicode_ci",
+                "create table %schat (%s,%s,%s,%s) engine InnoDB, default charset = utf8mb4 collate utf8mb4_unicode_ci",
                 dbPrefix,
-                "user char(4) primary key",
-                "message text",
+                "id bigint unsigned primary key default (uuid_short())",
+                "user char(4) not null",
+                "message text not null",
                 "moment datetime default current_timestamp"
         );
         try(Statement statement = dbProvider.getConnection().createStatement()) {

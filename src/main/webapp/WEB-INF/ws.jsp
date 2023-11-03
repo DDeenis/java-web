@@ -1,14 +1,22 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <h2>WebSocket</h2>
 <form onsubmit="sendMsg(event)">
-    <strong><%=request.getSession().getAttribute("user")%></strong>
+    <strong id="chat-user">Connecting...</strong>
     <input name="user-message" id="user-message" type="text" value="Hello">
     <button class="btn blue lighten-2" type="submit">Send</button>
 </form>
 <ul class="collection" id="chat-container"></ul>
 
 <script defer>
-    initWebSocket()
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem("token")
+        if(token) {
+            initWebSocket()
+        }
+        else {
+            document.getElementById('chat-user').innerText = "Log in to use chat"
+        }
+    })
 
     function getAppContext() {
         return '/' + window.location.pathname.split('/')[1]
@@ -26,25 +34,66 @@
 
     function onWsOpen(e) {
         //console.log('onWsOpen', e)
+        const token = localStorage.getItem("token")
+        window.websoket.send(JSON.stringify({
+            command: 'auth',
+            data: token
+        }))
         addMessage("Chat activated")
     }
 
     function onWsClose(e) {
         console.log('onWsClose', e)
+        addMessage('Chat deactivated')
     }
 
     function onWsMessage(e) {
-        //console.log('onWsMessage', e)
-        addMessage(e.data)
+        const msg = JSON.parse(e.data)
+        switch (msg.status) {
+            case 201: {
+                const data = JSON.parse(msg.data)
+                console.log(data)
+                addMessage(`${data.user}: ${data.message}`)
+            }
+                break;
+
+            case 202: {
+                document.getElementById('chat-user').innerText = msg.data
+            }
+                break;
+
+            case 401: {
+                document.getElementById('chat-user').innerText = "Auth required"
+            }
+                break;
+
+            case 403: {
+                document.getElementById('chat-user').innerText = "Log in one more time"
+            }
+
+            default:
+                break;
+        }
+        if(msg.status === 200) {
+
+        }
+        else {
+            console.log(msg)
+        }
     }
 
     function onWsError(e) {
         console.log('onWsError', e)
+        addMessage('Chat deactivated')
     }
 
     function sendMsg(e) {
         e.preventDefault()
-        window.websoket.send(document.getElementById('user-message').value)
+        window.websoket.send(JSON.stringify({
+            command: 'chat',
+            data: document.getElementById('user-message').value
+        }))
+        document.getElementById('user-message').value = ''
     }
 
     function addMessage(msg) {
